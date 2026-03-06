@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
+import Box from "@mui/material/Box";
+import List from "@mui/material/List";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Collapse from "@mui/material/Collapse";
+import IconButton from "@mui/material/IconButton";
+import Divider from "@mui/material/Divider";
+import Typography from "@mui/material/Typography";
 import {
   ChevronLeft,
   ChevronRight,
@@ -7,13 +16,16 @@ import {
   ChevronUp,
   FileText,
   Users,
-  Box,
+  Box as BoxIcon,
   ShoppingCart,
   Settings,
   Briefcase,
 } from "lucide-react";
 
 export default function Sidebar() {
+  const location = useLocation();
+  const pathname = location.pathname;
+
   const [collapsed, setCollapsed] = useState(false);
   const [width, setWidth] = useState(
     parseInt(localStorage.getItem("sidebarWidth")) || 240
@@ -27,11 +39,7 @@ export default function Sidebar() {
     master: false,
   });
 
-  // toggle menu open/close
-  const toggleMenu = (key) => {
-    setOpenMenu((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
+  const toggleMenu = (key) => setOpenMenu((prev) => ({ ...prev, [key]: !prev[key] }));
   const toggleCollapse = () => setCollapsed(!collapsed);
 
   const startResizing = (e) => {
@@ -59,216 +67,130 @@ export default function Sidebar() {
     };
   }, [isResizing, width]);
 
-  const navClasses = ({ isActive }) =>
-    `flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-200 text-sm ${
-      isActive ? "bg-gray-200 font-semibold" : ""
-    }`;
+  const isActive = (to, exact = false) => {
+    if (exact) return pathname === to;
+    return pathname === to || pathname.startsWith(to + "/");
+  };
+
+  const SectionHeader = ({ icon, label, openKey }) => (
+    <ListItemButton onClick={() => toggleMenu(openKey)} sx={{ borderRadius: 1 }}>
+      <ListItemIcon sx={{ minWidth: 32 }}>{icon}</ListItemIcon>
+      {!collapsed && <ListItemText primary={label} />}
+      {!collapsed && (openMenu[openKey] ? <ChevronUp size={16} /> : <ChevronDown size={16} />)}
+    </ListItemButton>
+  );
+
+  const NavItem = ({ to, label, icon, exact }) => (
+    <ListItemButton
+      component={NavLink}
+      to={to}
+      selected={isActive(to, exact)}
+      sx={{
+        borderRadius: 1,
+        pl: collapsed ? 1 : 3,
+        '&.Mui-selected': { bgcolor: 'action.selected', fontWeight: 600 },
+      }}
+    >
+      {icon && <ListItemIcon sx={{ minWidth: 32 }}>{icon}</ListItemIcon>}
+      {!collapsed && <ListItemText primary={label} />}
+    </ListItemButton>
+  );
 
   return (
-    <aside
-      style={{ width: collapsed ? "64px" : `${width}px` }}
-      className={`relative bg-gray-50 border-r transition-all duration-200 select-none`}
+    <Box
+      component="aside"
+      sx={{
+        position: 'relative',
+        width: collapsed ? 64 : width,
+        bgcolor: 'background.default',
+        borderRight: 1,
+        borderColor: 'divider',
+        transition: 'width 200ms',
+        userSelect: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b">
-        {!collapsed && <span className="font-semibold">ERP System</span>}
-        <button
-          onClick={toggleCollapse}
-          className="p-1 rounded hover:bg-gray-200"
-        >
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, borderBottom: 1, borderColor: 'divider' }}>
+        {!collapsed && (
+          <Typography variant="subtitle1" fontWeight={600}>
+            ERP System
+          </Typography>
+        )}
+        <IconButton size="small" onClick={toggleCollapse}>
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
-      </div>
+        </IconButton>
+      </Box>
 
       {/* Navigation */}
-      <nav className="p-2 space-y-1 overflow-y-auto text-gray-700">
-        {/* Dashboard */}
-        <NavLink to="/" className={navClasses} end>
-          <FileText size={18} />
-          {!collapsed && <span>Dashboard</span>}
-        </NavLink>
+      <Box sx={{ p: 1, color: 'text.primary', overflowY: 'auto', flex: 1 }}>
+        <List dense disablePadding>
+          {/* Dashboard */}
+          <NavItem to="/" label="Dashboard" icon={<FileText size={18} />} exact />
 
-        {/* ACCOUNTS */}
-        <div>
-          <button
-            onClick={() => toggleMenu("accounts")}
-            className="flex items-center justify-between w-full px-3 py-2 rounded hover:bg-gray-100"
-          >
-            <div className="flex items-center gap-2">
-              <Briefcase size={18} />
-              {!collapsed && <span>Accounts</span>}
-            </div>
-            {!collapsed &&
-              (openMenu.accounts ? (
-                <ChevronUp size={16} />
-              ) : (
-                <ChevronDown size={16} />
-              ))}
-          </button>
-          {!collapsed && openMenu.accounts && (
-            <div className="ml-8 mt-1 space-y-1">
-              <NavLink to="/invoices" className={navClasses}>
-                Invoices
-              </NavLink>
-              <NavLink to="/vendors" className={navClasses}>
-                Vendors
-              </NavLink>
-              <NavLink to="/accounts/expenses" className={navClasses}>
-                Expenses
-              </NavLink>
-              <NavLink to="/accounts/reports" className={navClasses}>
-                Reports
-              </NavLink>
-            </div>
-          )}
-        </div>
+          {/* ACCOUNTS */}
+          <SectionHeader icon={<Briefcase size={18} />} label="Accounts" openKey="accounts" />
+          <Collapse in={!collapsed && openMenu.accounts} timeout="auto" unmountOnExit>
+            <List disablePadding sx={{ ml: collapsed ? 0 : 4 }}>
+              <NavItem to="/invoices" label="Invoices" />
+              <NavItem to="/vendors" label="Vendors" />
+              <NavItem to="/accounts/expenses" label="Expenses" />
+              <NavItem to="/accounts/reports" label="Reports" />
+            </List>
+          </Collapse>
 
-        {/* HUMAN RESOURCE */}
-        <div>
-          <button
-            onClick={() => toggleMenu("hr")}
-            className="flex items-center justify-between w-full px-3 py-2 rounded hover:bg-gray-100"
-          >
-            <div className="flex items-center gap-2">
-              <Users size={18} />
-              {!collapsed && <span>Human Resource</span>}
-            </div>
-            {!collapsed &&
-              (openMenu.hr ? (
-                <ChevronUp size={16} />
-              ) : (
-                <ChevronDown size={16} />
-              ))}
-          </button>
-          {!collapsed && openMenu.hr && (
-            <div className="ml-8 mt-1 space-y-1">
-              <NavLink to="/human_resource/employees" className={navClasses}>
-                Employees
-              </NavLink>
-              <NavLink to="/human_resource/departments" className={navClasses}>
-                Departments
-              </NavLink>
-              <NavLink to="/human_resource/attendance" className={navClasses}>
-                Attendance
-              </NavLink>
-              <NavLink to="/human_resource/payroll" className={navClasses}>
-                Payroll
-              </NavLink>
-            </div>
-          )}
-        </div>
+          {/* HUMAN RESOURCE */}
+          <SectionHeader icon={<Users size={18} />} label="Human Resource" openKey="hr" />
+          <Collapse in={!collapsed && openMenu.hr} timeout="auto" unmountOnExit>
+            <List disablePadding sx={{ ml: collapsed ? 0 : 4 }}>
+              <NavItem to="/human_resource/employees" label="Employees" />
+              <NavItem to="/human_resource/departments" label="Departments" />
+              <NavItem to="/human_resource/attendance" label="Attendance" />
+              <NavItem to="/human_resource/payroll" label="Payroll" />
+            </List>
+          </Collapse>
 
-        {/* INVENTORY */}
-        <div>
-          <button
-            onClick={() => toggleMenu("inventory")}
-            className="flex items-center justify-between w-full px-3 py-2 rounded hover:bg-gray-100"
-          >
-            <div className="flex items-center gap-2">
-              <Box size={18} />
-              {!collapsed && <span>Inventory</span>}
-            </div>
-            {!collapsed &&
-              (openMenu.inventory ? (
-                <ChevronUp size={16} />
-              ) : (
-                <ChevronDown size={16} />
-              ))}
-          </button>
-          {!collapsed && openMenu.inventory && (
-            <div className="ml-8 mt-1 space-y-1">
-              <NavLink to="/inventory/items" className={navClasses}>
-                Items
-              </NavLink>
-              <NavLink to="/inventory/categories" className={navClasses}>
-                Categories
-              </NavLink>
-              <NavLink to="/inventory/stock" className={navClasses}>
-                Stock
-              </NavLink>
-              <NavLink to="/inventory/purchase-orders" className={navClasses}>
-                Purchase Orders
-              </NavLink>
-            </div>
-          )}
-        </div>
+          {/* INVENTORY */}
+          <SectionHeader icon={<BoxIcon size={18} />} label="Inventory" openKey="inventory" />
+          <Collapse in={!collapsed && openMenu.inventory} timeout="auto" unmountOnExit>
+            <List disablePadding sx={{ ml: collapsed ? 0 : 4 }}>
+              <NavItem to="/inventory/items" label="Items" />
+              <NavItem to="/inventory/categories" label="Categories" />
+              <NavItem to="/inventory/stock" label="Stock" />
+              <NavItem to="/inventory/purchase-orders" label="Purchase Orders" />
+            </List>
+          </Collapse>
 
-        {/* SALES */}
-        <div>
-          <button
-            onClick={() => toggleMenu("sales")}
-            className="flex items-center justify-between w-full px-3 py-2 rounded hover:bg-gray-100"
-          >
-            <div className="flex items-center gap-2">
-              <ShoppingCart size={18} />
-              {!collapsed && <span>Sales</span>}
-            </div>
-            {!collapsed &&
-              (openMenu.sales ? (
-                <ChevronUp size={16} />
-              ) : (
-                <ChevronDown size={16} />
-              ))}
-          </button>
-          {!collapsed && openMenu.sales && (
-            <div className="ml-8 mt-1 space-y-1">
-              <NavLink to="/sales/customers" className={navClasses}>
-                Customers
-              </NavLink>
-              <NavLink to="/sales/quotations" className={navClasses}>
-                Quotations
-              </NavLink>
-              <NavLink to="/sales/orders" className={navClasses}>
-                Orders
-              </NavLink>
-              <NavLink to="/sales/invoices" className={navClasses}>
-                Invoices
-              </NavLink>
-            </div>
-          )}
-        </div>
+          {/* SALES */}
+          <SectionHeader icon={<ShoppingCart size={18} />} label="Sales" openKey="sales" />
+          <Collapse in={!collapsed && openMenu.sales} timeout="auto" unmountOnExit>
+            <List disablePadding sx={{ ml: collapsed ? 0 : 4 }}>
+              <NavItem to="/sales/customers" label="Customers" />
+              <NavItem to="/sales/quotations" label="Quotations" />
+              <NavItem to="/sales/orders" label="Orders" />
+              <NavItem to="/sales/invoices" label="Invoices" />
+            </List>
+          </Collapse>
 
-        {/* MASTER DATA */}
-        <div>
-          <button
-            onClick={() => toggleMenu("master")}
-            className="flex items-center justify-between w-full px-3 py-2 rounded hover:bg-gray-100"
-          >
-            <div className="flex items-center gap-2">
-              <Settings size={18} />
-              {!collapsed && <span>Master Data</span>}
-            </div>
-            {!collapsed &&
-              (openMenu.master ? (
-                <ChevronUp size={16} />
-              ) : (
-                <ChevronDown size={16} />
-              ))}
-          </button>
-          {!collapsed && openMenu.master && (
-            <div className="ml-8 mt-1 space-y-1">
-              <NavLink to="/master_data/vendors" className={navClasses}>
-                Vendors
-              </NavLink>
-              <NavLink to="/master_data/units" className={navClasses}>
-                Units
-              </NavLink>
-              <NavLink to="/master_data/tax" className={navClasses}>
-                Tax Settings
-              </NavLink>
-              <NavLink to="/master_data/settings" className={navClasses}>
-                General Settings
-              </NavLink>
-            </div>
-          )}
-        </div>
-      </nav>
+          {/* MASTER DATA */}
+          <SectionHeader icon={<Settings size={18} />} label="Master Data" openKey="master" />
+          <Collapse in={!collapsed && openMenu.master} timeout="auto" unmountOnExit>
+            <List disablePadding sx={{ ml: collapsed ? 0 : 4 }}>
+              <NavItem to="/master_data/vendors" label="Vendors" />
+              <NavItem to="/master_data/units" label="Units" />
+              <NavItem to="/master_data/tax" label="Tax Settings" />
+              <NavItem to="/master_data/settings" label="General Settings" />
+            </List>
+          </Collapse>
+        </List>
+      </Box>
 
       {/* Resize Handle */}
-      <div
+      <Box
         onMouseDown={startResizing}
-        className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-gray-300 active:bg-gray-400"
-      ></div>
-    </aside>
+        sx={{ position: 'absolute', top: 0, right: 0, width: 4, height: '100%', cursor: 'col-resize', '&:hover': { bgcolor: 'action.hover' } }}
+      />
+    </Box>
   );
 }
