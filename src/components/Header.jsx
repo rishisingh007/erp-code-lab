@@ -1,14 +1,24 @@
-import logo from '../assets/images/logo.png';
+import AppBar from "@mui/material/AppBar";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
+import logo from "../assets/images/logo.png";
+
 export default function Header() {
   return (
-    <header className="bg-white shadow flex items-center justify-between px-6 py-3">
-      <div className="flex items-center space-x-3">
-        <img src={logo} alt="Logo" className="h-8 w-8" />
-        <span className="font-semibold text-lg">Smart ERP</span>
-      </div>
-      <div>
-        <button className="text-sm text-blue-600">Login</button>
-      </div>
-    </header>
+    <AppBar position="static" color="default" elevation={1} sx={{ bgcolor: "background.paper" }}>
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Box component="img" src={logo} alt="Logo" sx={{ width: 32, height: 32 }} />
+          <Typography variant="h6" fontWeight={600}>
+            Smart ERP
+          </Typography>
+        </Box>
+        <Button variant="text" color="primary" size="small">
+          Login
+        </Button>
+      </Toolbar>
+    </AppBar>
   );
 }
