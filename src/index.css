@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+/* Minimal global resets to let Tailwind-driven layout work */
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+}

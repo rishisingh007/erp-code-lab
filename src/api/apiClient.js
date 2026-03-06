@@ -1,0 +1,34 @@
+import axios from "axios";
+import { getToken, logout } from "../services/authService";
+
+const api = axios.create({
+  baseURL: "/api",
+  timeout: 15000,
+});
+
+api.interceptors.request.use((config) => {
+  const token = getToken();
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  config.headers["Content-Type"] = "application/json";
+
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+
+    if (error.response?.status === 401) {
+      logout();
+      window.location.href = "/login";
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export default api;
