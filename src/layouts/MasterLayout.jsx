@@ -1,4 +1,5 @@
 import { Outlet } from "react-router-dom";
+import Box from "@mui/material/Box";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
@@ -6,28 +7,37 @@ import Breadcrumb from "../components/Breadcrumb";
 
 export default function MasterLayout() {
   return (
-    <div className="w-screen h-screen flex flex-col bg-gray-50 overflow-hidden">
+    <Box
+      sx={{
+        width: "100vw",
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        bgcolor: "background.default",
+        overflow: "hidden",
+      }}
+    >
       {/* Header */}
       <Header />
 
       {/* Main content area */}
-      <div className="flex flex-1 overflow-hidden">
+      <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
         {/* Sidebar */}
-        <div className="flex h-screen"> 
-        <Sidebar />
-        </div>
+        <Box sx={{ display: "flex", height: "100%" }}>
+          <Sidebar />
+        </Box>
 
         {/* Main section */}
-        <main className="flex-1 overflow-y-auto p-6 bg-white">
+        <Box component="main" sx={{ flex: 1, overflowY: "auto", p: 3, bgcolor: "background.paper" }}>
           <Breadcrumb />
-          <div className="mt-4">
+          <Box sx={{ mt: 2 }}>
             <Outlet />
-          </div>
-        </main>
-      </div>
+          </Box>
+        </Box>
+      </Box>
 
       {/* Footer */}
       <Footer />
-    </div>
+    </Box>
   );
 }
